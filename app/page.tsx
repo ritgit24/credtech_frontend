@@ -1,6 +1,25 @@
+'use client'
 import Image from "next/image";
+import {useState} from "react"
 
 export default function Home() {
+
+  const [name, setName] = useState("");
+  const [message, setMessage] = useState("");
+
+ const handleSubmit = async () => {
+    try {
+      const res = await fetch(
+        `https://my-backend-45276376973.asia-south1.run.app/?name=${encodeURIComponent(name)}`
+      );
+      const data = await res.json();
+      setMessage(data.message);
+    } catch (err) {
+      console.error(err);
+      setMessage("Error talking to backend");
+    }
+  };
+
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
@@ -23,6 +42,21 @@ export default function Home() {
           <li className="tracking-[-.01em]">
             Save and see your changes instantly.
           </li>
+          <li className="tracking-[-.01em]">
+            Enter your name
+          </li>
+         <div>
+               <input
+        type="text"
+        placeholder="Enter your name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded mt-4"
+      />
+      <button onClick={handleSubmit} className="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+>Say Hi</button>
+      <p>{message}</p>
+    </div>
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
@@ -50,6 +84,7 @@ export default function Home() {
             Read our docs
           </a>
         </div>
+       
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
         <a

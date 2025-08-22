@@ -261,21 +261,70 @@ export default function Dashboard() {
       const data = await res.json();
 
       // Trend data
-      const trend: Trend[] = (data.history || []).map((d: any) => ({
-        date: d.date,
-        score: d.predictedRating,
-        confidence: d.confidence,
-      }));
+      // const trend: Trend[] = (data.history || []).map((d: any) => ({
+      //   date: d.date,
+      //   score: d.predictedRating,
+      //   confidence: d.confidence,
+      // }));
 
-      // Feature contributions (use last history item or data.features)
-      const features: Feature[] =
-        data.history?.slice(-1)[0]?.top_features?.map((f: any) => ({
-          feature: f.feature,
-          contribution: typeof f.contribution === "number" ? f.contribution : 0,
-        })) || Object.entries(data.features || {}).map(([key, val]) => ({
-          feature: key,
-          contribution: typeof val === "number" ? val : 0,
-        }));
+      // // Feature contributions (use last history item or data.features)
+      // const features: Feature[] =
+      //   data.history?.slice(-1)[0]?.top_features?.map((f: any) => ({
+      //     feature: f.feature,
+      //     contribution: typeof f.contribution === "number" ? f.contribution : 0,
+      //   })) || Object.entries(data.features || {}).map(([key, val]) => ({
+      //     feature: key,
+      //     contribution: typeof val === "number" ? val : 0,
+      //   }));
+
+      interface HistoryItem {
+  date: string;
+  predictedRating: number;
+  confidence: number;
+  top_features?: { feature: string; contribution: number }[];
+}
+
+interface BackendData {
+  symbol: string;
+  history?: HistoryItem[];
+  features?: Record<string, number>;
+}
+
+// Inside your async function after fetching:
+
+// Trend data
+const trend: Trend[] = (data.history || []).map((d: HistoryItem) => ({
+  date: d.date,
+  score: d.predictedRating,
+  confidence: d.confidence,
+}));
+
+// Feature contributions
+// const features: Feature[] =
+//   data.history?.slice(-1)[0]?.top_features?.map((f) => ({
+//     feature: f.feature,
+//     contribution: typeof f.contribution === "number" ? f.contribution : 0,
+//   })) || Object.entries(data.features || {}).map(([key, val]) => ({
+//     feature: key,
+//     contribution: typeof val === "number" ? val : 0,
+//   }));
+
+interface TopFeature {
+  feature: string;
+  contribution: number;
+}
+
+// Feature contributions (last history item or data.features)
+const features: Feature[] =
+  data.history?.slice(-1)[0]?.top_features?.map((f: TopFeature) => ({
+    feature: f.feature,
+    contribution: typeof f.contribution === "number" ? f.contribution : 0,
+  })) || Object.entries(data.features || {}).map(([key, val]) => ({
+    feature: key,
+    contribution: typeof val === "number" ? val : 0,
+  }));
+
+
 
       // Snapshot
       const snapshotObj: Record<string, number> = data.features || {};

@@ -1,19 +1,68 @@
-'use client'
-import Image from "next/image";
-import {useState} from "react"
+"use client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
+import { Bell, TrendingUp, Building2, Search, Gauge } from "lucide-react";
+import { useState } from "react";
 
-export default function Home() {
-
-  const [name, setName] = useState("");
+export default function Dashboard() {
+  const [search, setSearch] = useState("");
+  const [company, setCompany] = useState("Company XYZ");
+  const [predictedRating, setPredictedRating] = useState<number | null>(null);
+  const [ratingLabel, setRatingLabel] = useState("");
+  const [confidence, setConfidence] = useState<number | null>(null);
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [featureData, setFeatureData] = useState<any[]>([]);
+  const [topFeatureData, setTopFeatureData] = useState<any[]>([]);
+  const [snapshot, setSnapshot] = useState<any | null>(null);
   const [message, setMessage] = useState("");
 
- const handleSubmit = async () => {
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       const res = await fetch(
-        `https://my-backend-45276376973.asia-south1.run.app/?name=${encodeURIComponent(name)}`
+        `http://localhost:8000/company?symbol=${encodeURIComponent(search)}`
       );
       const data = await res.json();
-      setMessage(data.message);
+
+      // --- Trend data ---
+      const trend = (data.history || []).map((d: any) => ({
+        date: d.date,
+        score: d.predictedRating,
+        confidence: d.confidence,
+      }));
+
+      // --- Latest top_features (for last day) ---
+      const topFeatureData =
+        data.history?.slice(-1)[0]?.top_features?.map((f: any) => ({
+          feature: f.feature,
+          contribution: f.contribution,
+        })) || [];
+     setFeatureData(topFeatureData);
+      // console.log(topFeatureData);
+      console.log(featureData);
+      
+      const snapshotObj = data.features || {};
+
+      setCompany(data.symbol || "Unknown");
+      setPredictedRating(data.history?.slice(-1)[0]?.predictedRating ?? null);
+      setConfidence(data.history?.slice(-1)[0]?.confidence ?? null);
+      setTrendData(trend);
+      
+      setSnapshot(snapshotObj);
+      // 
+      // setTopFeatureData(topFeatures);
+
+      setMessage("");
     } catch (err) {
       console.error(err);
       setMessage("Error talking to backend");
@@ -21,118 +70,125 @@ export default function Home() {
   };
 
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-          <li className="tracking-[-.01em]">
-            Enter your name
-          </li>
-         <div>
-               <input
-        type="text"
-        placeholder="Enter your name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded mt-4"
-      />
-      <button onClick={handleSubmit} className="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
->Say Hi</button>
-      <p>{message}</p>
-    </div>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div className="p-6 grid grid-cols-12 gap-6">
+      {/* Search Bar */}
+      <div className="col-span-12">
+        <form onSubmit={handleSearch} className="flex items-center gap-2">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search company name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-       
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          </div>
+          <Button type="submit" variant="default">
+            Search
+          </Button>
+        </form>
+        {message && <p className="text-red-500 mt-2">{message}</p>}
+      </div>
+
+      {/* Company Overview */}
+      <Card className="col-span-3 shadow-xl rounded-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Building2 className="w-5 h-5" /> {company}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-4xl font-bold text-green-600">
+            {predictedRating ?? "--"}
+          </p>
+          <p className="text-sm text-muted-foreground">Predicted Rating</p>
+          <p className="text-xl font-semibold mt-2">{ratingLabel}</p>
+          <p className="text-sm text-muted-foreground">
+            Confidence: {confidence ? (confidence * 100).toFixed(1) + "%" : "--"}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Score Trend */}
+      <Card className="col-span-8 shadow-xl rounded-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" /> Score Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={trendData}>
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="score"
+                stroke="#16a34a"
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+ <Card className="col-span-6 shadow-xl rounded-2xl ">
+  <CardHeader>
+    <CardTitle>Feature Contributions</CardTitle>
+  </CardHeader>
+  <CardContent className="h-64 text-lg">
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart
+        data={featureData}
+        layout="vertical"
+        margin={{ left: 120, right: 20, top: 20, bottom: 20 }}  >
+        <XAxis type="number" />
+        <YAxis
+          type="category"
+          dataKey="feature"
+          tick={{ fontSize: 10 }} 
+          width={110} 
+          interval={0} 
+          className="font-medium text-base"
+        />
+        <Tooltip 
+          formatter={(value: number) => value.toFixed(4)}
+          labelFormatter={(label) => `Feature: ${label}`}
+        />
+        <Bar dataKey="contribution" fill="#2563eb" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  </CardContent>
+</Card>
+
+      <Card className="col-span-12 shadow-xl rounded-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gauge className="w-5 h-5" /> Financial Snapshot
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {snapshot ? (
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              {Object.entries(snapshot).map(([key, value]) => (
+                <div key={key} className="p-2 border rounded-lg">
+                  <p className="font-medium">{key}</p>
+                  <p className="text-muted-foreground">
+                    {typeof value === "number"
+                      ? value.toFixed(3)
+                      : String(value)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No snapshot available</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
+

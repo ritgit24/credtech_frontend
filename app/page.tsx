@@ -11,20 +11,43 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { Bell, TrendingUp, Building2, Search, Gauge } from "lucide-react";
+import { TrendingUp, Building2, Search, Gauge } from "lucide-react";
 import { useState } from "react";
 
 export default function Dashboard() {
-  const [search, setSearch] = useState("");
-  const [company, setCompany] = useState("Company XYZ");
-  const [predictedRating, setPredictedRating] = useState<number | null>(null);
-  const [ratingLabel, setRatingLabel] = useState("");
-  const [confidence, setConfidence] = useState<number | null>(null);
-  const [trendData, setTrendData] = useState<any[]>([]);
-  const [featureData, setFeatureData] = useState<any[]>([]);
-  const [topFeatureData, setTopFeatureData] = useState<any[]>([]);
-  const [snapshot, setSnapshot] = useState<any | null>(null);
-  const [message, setMessage] = useState("");
+  // const [search, setSearch] = useState("");
+  // const [company, setCompany] = useState("Company XYZ");
+  // const [predictedRating, setPredictedRating] = useState<number | null>(null);
+  // const [ratingLabel, setRatingLabel] = useState("");
+  // const [confidence, setConfidence] = useState<number | null>(null);
+  // const [trendData, setTrendData] = useState<any[]>([]);
+  // const [featureData, setFeatureData] = useState<any[]>([]);
+  // // const [topFeatureData, setTopFeatureData] = useState<any[]>([]);
+  // const [snapshot, setSnapshot] = useState<any | null>(null);
+  // const [message, setMessage] = useState("");
+  type Trend = {
+  date: string;
+  score: number;
+  confidence: number;
+};
+
+type Feature = {
+  feature: string;
+  importance: number;
+  contribution?: number;
+};
+
+const [search, setSearch] = useState<string>("");
+const [company, setCompany] = useState<string>("Company XYZ");
+const [predictedRating, setPredictedRating] = useState<number | null>(null);
+const [ratingLabel, setRatingLabel] = useState<string>("");
+const [confidence, setConfidence] = useState<number | null>(null);
+const [trendData, setTrendData] = useState<Trend[]>([]);
+const [featureData, setFeatureData] = useState<Feature[]>([]);
+// const [topFeatureData, setTopFeatureData] = useState<Feature[]>([]);
+const [snapshot, setSnapshot] = useState<Record<string, number> | null>(null);
+const [message, setMessage] = useState<string>("");
+
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
